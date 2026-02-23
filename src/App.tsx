@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,13 +11,39 @@ import {
   Search
 } from 'lucide-react';
 import { formatCurrency } from './utils/formatters';
+import { supabase } from './lib/supabase';
+import Auth from './pages/Auth';
+import type { Session } from '@supabase/supabase-js';
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null);
   const [balance] = useState({
     total: 2450.75,
     income: 5200.00,
     expenses: 2749.25
   });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!session) {
+    return <Auth />;
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const recentTransactions = [
     { id: '1', type: 'income', amount: 3500, description: 'Sueldo Febrero', date: '2026-02-23' },
@@ -53,7 +79,10 @@ function App() {
         </nav>
 
         <div className="pt-6 border-t">
-          <button className="flex items-center space-x-3 px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl w-full transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl w-full transition-colors"
+          >
             <LogOut className="w-5 h-5" />
             <span>Cerrar Sesión</span>
           </button>
