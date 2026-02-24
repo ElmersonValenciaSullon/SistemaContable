@@ -1,6 +1,4 @@
 import type { DayTrend } from '../types';
-import { formatCurrency } from '../utils/formatters';
-
 interface Props { data: DayTrend[]; }
 
 // Gráfico de barras SVG para el dashboard — ingreso vs gasto por día
