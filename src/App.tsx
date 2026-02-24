@@ -19,40 +19,54 @@ export default function App() {
   const [menuMovil, setMenuMovil] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  // Estado del modal de transacción
+  // Estado del modal
   const [modalAbierto, setModalAbierto] = useState(false);
   const [tipoModal, setTipoModal] = useState<TransactionType>('income');
   const [txEditar, setTxEditar] = useState<Transaction | null>(null);
 
-  // ── Hooks de datos ──
+  // Hooks de datos — FIX: ahora useTransactions retorna editarTransaccion y metrics
   const {
-    transactions, metrics, loading: txLoading,
-    agregarTransaccion, editarTransaccion, eliminarTransaccion,
+    transactions,
+    metrics,
+    loading: txLoading,
+    agregarTransaccion,
+    editarTransaccion,
+    eliminarTransaccion,
   } = useTransactions();
-  const { categories, loading: catLoading, crearCategoria, eliminarCategoria } = useCategories();
 
-  // ── Sesión de Supabase ──
+  const {
+    categories,
+    loading: catLoading,
+    crearCategoria,
+    eliminarCategoria,
+  } = useCategories();
+
+  // Sesión de Supabase
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setSessionLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
       setSessionLoading(false);
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  if (sessionLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f0f4f8]">
-      <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+  // FIX: border-3 no existe en Tailwind — usar border-[3px]
+  if (sessionLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f4f8]">
+        <div className="w-10 h-10 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
 
   if (!session) return <Auth />;
 
-  // ── Handlers del modal ──
+  // Handlers del modal
   const abrirModal = (tipo: TransactionType) => {
     setTipoModal(tipo);
     setTxEditar(null);
@@ -65,49 +79,62 @@ export default function App() {
     setModalAbierto(true);
   };
 
-  const handleGuardar = async (data: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'categories'>) => {
+  const handleGuardar = async (
+    data: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'categories'>
+  ) => {
     if (txEditar) return editarTransaccion(txEditar.id, data);
     return agregarTransaccion(data);
   };
 
-  const handleLogout = async () => { await supabase.auth.signOut(); };
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="h-screen flex overflow-hidden bg-[#f0f4f8]">
 
-      {/* ── Sidebar desktop ── */}
+      {/* Sidebar desktop */}
       <div className="hidden lg:flex flex-shrink-0">
         <Sidebar
-          pagina={pagina} setPagina={p => { setPagina(p); setBusqueda(''); }}
-          email={session.user.email ?? ''} onLogout={handleLogout}
+          pagina={pagina}
+          setPagina={(p) => { setPagina(p); setBusqueda(''); }}
+          email={session.user.email ?? ''}
+          onLogout={handleLogout}
         />
       </div>
 
-      {/* ── Sidebar móvil overlay ── */}
+      {/* Sidebar móvil overlay */}
       {menuMovil && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMenuMovil(false)} />
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setMenuMovil(false)}
+          />
           <div className="relative z-10 w-60">
             <Sidebar
-              pagina={pagina} setPagina={p => { setPagina(p); setMenuMovil(false); setBusqueda(''); }}
-              email={session.user.email ?? ''} onLogout={handleLogout}
+              pagina={pagina}
+              setPagina={(p) => { setPagina(p); setMenuMovil(false); setBusqueda(''); }}
+              email={session.user.email ?? ''}
+              onLogout={handleLogout}
             />
           </div>
         </div>
       )}
 
-      {/* ── Área principal ── */}
+      {/* Área principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar
-          pagina={pagina} onNueva={abrirModal}
+          pagina={pagina}
+          onNueva={abrirModal}
           onMenuMovil={() => setMenuMovil(!menuMovil)}
-          busqueda={busqueda} onBusqueda={setBusqueda}
+          busqueda={busqueda}
+          onBusqueda={setBusqueda}
         />
 
-        {/* Página activa */}
         {pagina === 'dashboard' && (
           <Dashboard
-            metrics={metrics} loading={txLoading}
+            metrics={metrics}
+            loading={txLoading}
             recentTxs={transactions}
             onEliminar={eliminarTransaccion}
             onEditar={abrirEdicion}
@@ -116,20 +143,25 @@ export default function App() {
         )}
         {pagina === 'historial' && (
           <Historial
-            transactions={transactions} categories={categories}
-            onEliminar={eliminarTransaccion} onEditar={abrirEdicion}
-            busqueda={busqueda} onBusqueda={setBusqueda}
+            transactions={transactions}
+            categories={categories}
+            onEliminar={eliminarTransaccion}
+            onEditar={abrirEdicion}
+            busqueda={busqueda}
+            onBusqueda={setBusqueda}
           />
         )}
         {pagina === 'categorias' && (
           <Categorias
-            categories={categories} loading={catLoading}
-            onCrear={crearCategoria} onEliminar={eliminarCategoria}
+            categories={categories}
+            loading={catLoading}
+            onCrear={crearCategoria}
+            onEliminar={eliminarCategoria}
           />
         )}
       </div>
 
-      {/* ── Modal de transacción ── */}
+      {/* Modal de transacción */}
       {modalAbierto && (
         <ModalTransaccion
           onClose={() => { setModalAbierto(false); setTxEditar(null); }}

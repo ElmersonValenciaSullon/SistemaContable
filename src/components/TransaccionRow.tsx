@@ -22,19 +22,25 @@ export default function TransaccionRow({ tx, onEliminar, onEditar }: Props) {
   };
 
   return (
-    <div className={`
-      flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200
-      hover:border-blue-100 hover:bg-blue-50/30 group
-      ${confirmando ? 'border-red-200 bg-red-50/50' : 'border-slate-100 bg-white'}
-    `}>
+    <div
+      className={`
+        flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all duration-200
+        hover:border-blue-100 hover:bg-blue-50/30 group
+        ${confirmando ? 'border-red-200 bg-red-50/50' : 'border-slate-100 bg-white'}
+      `}
+    >
       {/* Ícono tipo */}
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-        tx.type === 'income' ? 'bg-emerald-100' : 'bg-red-100'
-      }`}>
-        {tx.type === 'income'
-          ? <TrendingUp className="w-4.5 h-4.5 text-emerald-600" />
-          : <TrendingDown className="w-4.5 h-4.5 text-red-500" />
-        }
+      {/* FIX: w-4.5 h-4.5 no es clase válida en Tailwind → usar w-[18px] h-[18px] */}
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          tx.type === 'income' ? 'bg-emerald-100' : 'bg-red-100'
+        }`}
+      >
+        {tx.type === 'income' ? (
+          <TrendingUp className="w-[18px] h-[18px] text-emerald-600" />
+        ) : (
+          <TrendingDown className="w-[18px] h-[18px] text-red-500" />
+        )}
       </div>
 
       {/* Info */}
@@ -45,18 +51,27 @@ export default function TransaccionRow({ tx, onEliminar, onEditar }: Props) {
           {tx.categories && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: tx.categories.color + '20', color: tx.categories.color }}
+              style={{
+                background: tx.categories.color + '20',
+                color: tx.categories.color,
+              }}
             >
               {tx.categories.name}
             </span>
           )}
         </div>
-        {tx.notes && <p className="text-xs text-slate-400 italic mt-0.5 truncate">{tx.notes}</p>}
+        {tx.notes && (
+          <p className="text-xs text-slate-400 italic mt-0.5 truncate">{tx.notes}</p>
+        )}
       </div>
 
       {/* Monto */}
       <div className="text-right flex-shrink-0">
-        <p className={`font-bold text-sm ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
+        <p
+          className={`font-bold text-sm ${
+            tx.type === 'income' ? 'text-emerald-600' : 'text-red-500'
+          }`}
+        >
           {tx.type === 'income' ? '+' : '−'} {formatCurrency(tx.amount)}
         </p>
       </div>
@@ -73,17 +88,18 @@ export default function TransaccionRow({ tx, onEliminar, onEditar }: Props) {
         <button
           onClick={handleEliminar}
           disabled={eliminando}
-          title={confirmando ? 'Clic para confirmar' : 'Eliminar'}
+          title={confirmando ? 'Clic para confirmar eliminación' : 'Eliminar'}
           className={`p-1.5 rounded-lg transition-colors ${
             confirmando
               ? 'bg-red-500 text-white hover:bg-red-600'
               : 'hover:bg-red-50 text-slate-400 hover:text-red-500'
           }`}
         >
-          {eliminando
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Trash2 className="w-3.5 h-3.5" />
-          }
+          {eliminando ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Trash2 className="w-3.5 h-3.5" />
+          )}
         </button>
       </div>
     </div>
