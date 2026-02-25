@@ -133,11 +133,13 @@ export default function Auth() {
       });
       if (error) throw error;
       // Mensaje genérico por seguridad — no revelar si el correo existe o no
-      setMensaje(`Si ${email} está registrado, recibirás un enlace para crear una nueva contraseña. Revisa también tu carpeta de spam.`);
+      setMensaje(`Recibirás un enlace para crear una nueva contraseña. Revisa tu bandeja de entrada o carpeta de spam.`);
     } catch (err: any) {
       const msg: string = err.message || '';
-      if (msg.includes('over_email_send_rate_limit')) {
-        setError('Demasiados intentos. Espera unos minutos.');
+      if (msg.includes('over_email_send_rate_limit') || msg.includes('email rate limit')) {
+        setError('Límite de envíos alcanzado. Espera unos minutos antes de volver a intentarlo.');
+      } else if (msg.includes('Failed to fetch') || msg.includes('fetch') || msg.includes('ERR_NAME_NOT_RESOLVED') || msg.includes('NetworkError')) {
+        setError('Sin conexión a internet. Verifica tu conexión y vuelve a intentarlo.');
       } else {
         setError(msg || 'No se pudo enviar el correo. Intenta más tarde.');
       }

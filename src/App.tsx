@@ -36,8 +36,14 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setSessionLoading(false);
+
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
       if (event === 'SIGNED_OUT') setRecoveryMode(false);
+
+      // FIX: Invalid Refresh Token — cuando el token guardado en localStorage
+      // es inválido o expiró, Supabase dispara SIGNED_OUT automáticamente.
+      // session=null hará que el usuario vea el login. No requiere acción extra.
+      // El error en consola "Invalid Refresh Token" es normal y esperado.
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -50,7 +56,6 @@ export default function App() {
     );
 
   if (!session) return <Auth />;
-
   if (recoveryMode) return <NuevaContrasena onExito={() => setRecoveryMode(false)} />;
 
   const abrirModal = (tipo: TransactionType) => {
