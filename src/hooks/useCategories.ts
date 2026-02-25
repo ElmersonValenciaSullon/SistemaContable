@@ -9,6 +9,10 @@ export function useCategories() {
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
+      // RACE CONDITION FIX: igual que useTransactions
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setLoading(false); return; }
+
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -21,6 +25,16 @@ export function useCategories() {
       setLoading(false);
     }
   }, []);
+
+  // RACE CONDITION FIX: re-fetch cuando Supabase restaura la sesión
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        fetchCategories();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [fetchCategories]);
 
   const crearCategoria = useCallback(async (form: FormCategoria): Promise<OpResult> => {
     try {
